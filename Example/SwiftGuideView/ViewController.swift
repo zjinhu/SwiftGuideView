@@ -15,7 +15,7 @@ class ViewController: UIViewController {
 
         DispatchQueue.main.asyncAfter(deadline: .now()+5) {
             SwiftGuideView.showGuide(pageArray: ["1","2","3","4","5"], fromVC: self) { (c) in
-                c.openButtonTitle = "进入APP" 
+                c.openButtonTitle = "进入APP"
             }
         }
     }

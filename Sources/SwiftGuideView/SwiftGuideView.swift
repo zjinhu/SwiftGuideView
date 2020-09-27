@@ -1,8 +1,7 @@
 import UIKit
-import SnapKit
 import SwiftPageView
 import JXPageControl
-
+import SnapKit
 public class SwiftGuideView: UIViewController {
     
     public typealias ConfigBlock = ((_ config : GuideConfig) -> Void)
@@ -17,7 +16,31 @@ public class SwiftGuideView: UIViewController {
         }
     }
     
+    var config : GuideConfig?{
+        didSet{
+            guard let model = config else {
+                return
+            }
+            
+            pageControl.inactiveColor = model.pageControlInactiveColor
+            pageControl.activeColor = model.pageControlActiveColor
+            pageControl.inactiveSize = model.pageControlInactiveSize
+            pageControl.activeSize = model.pageControlActiveSize
+            pageControl.columnSpacing = model.pageControlColumnSpacing
+
+            
+            openButton.titleLabel?.font = model.openButtonFont
+            openButton.setTitle(model.openButtonTitle, for: .normal)
+            openButton.setTitleColor(model.openButtonTitleColor, for: .normal)
+            openButton.layer.cornerRadius = model.openButtonRadius
+            openButton.backgroundColor = model.openButtonColor
+
+            view.layoutIfNeeded()
+        }
+    }
+    
     lazy var pageControl: JXPageControlJump = {
+        
         let pageControl = JXPageControlJump()
         // JXPageControlType: default property
         pageControl.currentPage = 0
@@ -33,7 +56,7 @@ public class SwiftGuideView: UIViewController {
     }()
     
     lazy var pageView: PageView = {
-        let pageView = PageView()
+        let pageView = PageView(frame: UIScreen.main.bounds)
         pageView.dataSource = self
         pageView.delegate = self
         pageView.isInfinite = false
@@ -61,20 +84,19 @@ public class SwiftGuideView: UIViewController {
             m.edges.equalToSuperview()
         }
         
-        pageControl.snp.makeConstraints { (m) in
+        pageControl.snp.remakeConstraints { (m) in
             m.left.right.equalToSuperview()
             m.height.equalTo(40)
-            m.bottom.equalToSuperview().offset(-50)
+            m.bottom.equalToSuperview().offset(-(config?.pageControlOffSetY ?? 50))
         }
         
-        openButton.snp.makeConstraints { (m) in
+        openButton.snp.remakeConstraints { (m) in
             m.centerX.equalToSuperview()
-            m.height.equalTo(50)
-            m.width.equalTo(190)
-            m.bottom.equalToSuperview().offset(-50)
+            m.size.equalTo(config?.openButtonSize ?? .init(width: 200, height: 50))
+            m.bottom.equalToSuperview().offset(-(config?.openButtonOffSetY ?? 50))
         }
     }
-    
+
 }
 
 extension SwiftGuideView:  PageViewDataSource, PageViewDelegate {
@@ -122,29 +144,18 @@ extension SwiftGuideView {
     ///   - fromVC: 从哪个页面启动
     ///   - deploy: 配置器
     public static func showGuide(pageArray : [String], fromVC : UIViewController, deploy : ConfigBlock){
-        if (!(UserDefaults.standard.bool(forKey: "everLaunched"))) {
-            UserDefaults.standard.set(true, forKey:"everLaunched")
+//        if (!(UserDefaults.standard.bool(forKey: "everLaunched"))) {
+//            UserDefaults.standard.set(true, forKey:"everLaunched")
             let model = GuideConfig()
             deploy(model)
             
             let vc = SwiftGuideView()
-            
-            vc.pageControl.inactiveColor = model.pageControlInactiveColor
-            vc.pageControl.activeColor = model.pageControlActiveColor
-            vc.pageControl.inactiveSize = model.pageControlInactiveSize
-            vc.pageControl.activeSize = model.pageControlActiveSize
-            vc.pageControl.columnSpacing = model.pageControlColumnSpacing
-            
-            vc.openButton.titleLabel?.font = model.openButtonFont
-            vc.openButton.setTitle(model.openButtonTitle, for: .normal)
-            vc.openButton.setTitleColor(model.openButtonTitleColor, for: .normal)
-            vc.openButton.layer.cornerRadius = model.openButtonRadius
-            vc.openButton.backgroundColor = model.openButtonColor
-            
+            vc.config = model
             vc.pageArray = pageArray
+            
             vc.modalPresentationStyle = .fullScreen
             fromVC.present(vc, animated: false) { }
-        }
+//        }
     }
     
     @objc func disMissGuide(){
@@ -165,6 +176,8 @@ public class GuideConfig {
     public var openButtonRadius : CGFloat = 25
     /// 按钮背景色
     public var openButtonColor : UIColor = .orange
+    /// 按钮 距离底部
+    public var openButtonOffSetY : CGFloat = 50
     
     /// pageControl 未选中颜色
     public var pageControlInactiveColor = UIColor.white
@@ -176,4 +189,6 @@ public class GuideConfig {
     public var pageControlActiveSize = CGSize(width: 20, height: 10)
     /// pageControl 间距
     public var pageControlColumnSpacing : CGFloat = 10
+    /// pageControl 距离底部
+    public var pageControlOffSetY : CGFloat = 50
 }
