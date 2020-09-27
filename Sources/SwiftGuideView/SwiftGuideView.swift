@@ -144,18 +144,19 @@ extension SwiftGuideView {
     ///   - fromVC: 从哪个页面启动
     ///   - deploy: 配置器
     public static func showGuide(pageArray : [String], fromVC : UIViewController, deploy : ConfigBlock){
-//        if (!(UserDefaults.standard.bool(forKey: "everLaunched"))) {
-//            UserDefaults.standard.set(true, forKey:"everLaunched")
-            let model = GuideConfig()
-            deploy(model)
-            
+        let model = GuideConfig()
+        deploy(model)
+        
+        if !(UserDefaults.standard.bool(forKey: "everLaunched")) || model.isDebug == true {
+            UserDefaults.standard.set(true, forKey:"everLaunched")
+
             let vc = SwiftGuideView()
             vc.config = model
             vc.pageArray = pageArray
             
             vc.modalPresentationStyle = .fullScreen
             fromVC.present(vc, animated: false) { }
-//        }
+        }
     }
     
     @objc func disMissGuide(){
@@ -164,6 +165,8 @@ extension SwiftGuideView {
 }
 
 public class GuideConfig {
+    ///是否每次都展示
+    public var isDebug : Bool = false
     /// 按钮标题
     public var openButtonTitle : String?
     /// 按钮字体颜色
@@ -191,4 +194,5 @@ public class GuideConfig {
     public var pageControlColumnSpacing : CGFloat = 10
     /// pageControl 距离底部
     public var pageControlOffSetY : CGFloat = 50
+    
 }
