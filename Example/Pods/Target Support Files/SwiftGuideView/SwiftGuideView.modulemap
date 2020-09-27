@@ -1,0 +1,6 @@
+framework module SwiftGuideView {
+  umbrella header "SwiftGuideView-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,0 +1,10 @@
+use_frameworks!
+source 'https://cdn.cocoapods.org/'
+platform :ios, '11.0'
+target 'SwiftGuideView_Example' do
+  pod 'SwiftGuideView', :path => '../'
+  
+  pod 'SnapKit'
+  pod 'SwiftPageView'
+  pod 'JXPageControl'
+end
