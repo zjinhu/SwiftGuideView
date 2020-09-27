@@ -77,7 +77,7 @@ public class SwiftGuideView: UIViewController {
     
 }
 
-extension SwiftGuideView:  PageViewDataSource, PageViewDelegeta {
+extension SwiftGuideView:  PageViewDataSource, PageViewDelegate {
     
     public func numberOfItems(in pageView: PageView) -> Int {
         guard let array = pageArray else {

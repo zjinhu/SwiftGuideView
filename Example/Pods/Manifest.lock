@@ -13,7 +13,7 @@ PODS:
     - JXPageControl
     - SnapKit
     - SwiftPageView
-  - SwiftPageView (0.1.0)
+  - SwiftPageView (0.4.0)
 
 DEPENDENCIES:
   - JXPageControl
@@ -35,7 +35,7 @@ SPEC CHECKSUMS:
   JXPageControl: eea52838699a4949063e600b25eb9e8b6e20ae3f
   SnapKit: 97b92857e3df3a0c71833cce143274bf6ef8e5eb
   SwiftGuideView: 007f06db81397afca77ec21fac3e255fd6081aca
-  SwiftPageView: 91cfbf627474e911110eba43679b395362d1139b
+  SwiftPageView: a8c05f1e4d9a648a98dccc18ae85002cc46827eb
 
 PODFILE CHECKSUM: 5bf6d9c898ff0f874d8ac90917441d2e5e94d1f2
 
