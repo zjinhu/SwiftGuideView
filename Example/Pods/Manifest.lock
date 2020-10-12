@@ -9,11 +9,10 @@ PODS:
   - JXPageControl/Transform (0.1.3):
     - JXPageControl/Common
   - SnapKit (5.0.1)
-  - SwiftGuideView (0.1.0):
-    - JXPageControl
+  - SwiftGuideView (0.5.0):
     - SnapKit
     - SwiftPageView
-  - SwiftPageView (0.4.0)
+  - SwiftPageView (0.6.0)
 
 DEPENDENCIES:
   - JXPageControl
@@ -34,8 +33,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   JXPageControl: eea52838699a4949063e600b25eb9e8b6e20ae3f
   SnapKit: 97b92857e3df3a0c71833cce143274bf6ef8e5eb
-  SwiftGuideView: 007f06db81397afca77ec21fac3e255fd6081aca
-  SwiftPageView: a8c05f1e4d9a648a98dccc18ae85002cc46827eb
+  SwiftGuideView: afce579c99ff210c79353670b05bf1e18ef85b41
+  SwiftPageView: ac0f40ccd5bcd52e8fdfa30b6b506d6bd895f8f1
 
 PODFILE CHECKSUM: 5bf6d9c898ff0f874d8ac90917441d2e5e94d1f2
 

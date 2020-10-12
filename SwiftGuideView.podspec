@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'SwiftGuideView'
-  s.version          = '0.5.0'
+  s.version          = '0.8.0'
   s.summary          = 'A short description of SwiftGuideView.'
 
   s.description      = <<-DESC
@@ -19,6 +19,5 @@ TODO: Add long description of the pod here.
   s.source_files = 'Sources/**/*'
   s.requires_arc = true
   s.dependency 'SwiftPageView'
-  s.dependency 'SnapKit'
-  s.dependency 'JXPageControl'
+  s.dependency 'SnapKit' 
 end

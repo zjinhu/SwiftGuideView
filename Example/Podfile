@@ -5,6 +5,5 @@ target 'SwiftGuideView_Example' do
   pod 'SwiftGuideView', :path => '../'
   
   pod 'SnapKit'
-  pod 'SwiftPageView'
-  pod 'JXPageControl'
+  pod 'SwiftPageView' 
 end

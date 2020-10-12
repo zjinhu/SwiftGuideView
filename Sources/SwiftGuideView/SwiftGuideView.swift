@@ -1,6 +1,5 @@
 import UIKit
 import SwiftPageView
-import JXPageControl
 import SnapKit
 public class SwiftGuideView: UIViewController {
     
@@ -22,13 +21,9 @@ public class SwiftGuideView: UIViewController {
                 return
             }
             
-            pageControl.inactiveColor = model.pageControlInactiveColor
-            pageControl.activeColor = model.pageControlActiveColor
-            pageControl.inactiveSize = model.pageControlInactiveSize
-            pageControl.activeSize = model.pageControlActiveSize
-            pageControl.columnSpacing = model.pageControlColumnSpacing
+            pageControl.pageIndicatorTintColor = model.pageControlInactiveColor
+            pageControl.currentPageIndicatorTintColor = model.pageControlActiveColor
 
-            
             openButton.titleLabel?.font = model.openButtonFont
             openButton.setTitle(model.openButtonTitle, for: .normal)
             openButton.setTitleColor(model.openButtonTitleColor, for: .normal)
@@ -39,19 +34,11 @@ public class SwiftGuideView: UIViewController {
         }
     }
     
-    lazy var pageControl: JXPageControlJump = {
-        
-        let pageControl = JXPageControlJump()
-        // JXPageControlType: default property
+    lazy var pageControl: UIPageControl = {
+        let pageControl = UIPageControl()
         pageControl.currentPage = 0
-        pageControl.progress = 0.0
         pageControl.hidesForSinglePage = false
-        pageControl.contentAlignment = JXPageControlAlignment(.center,
-                                                              .center)
         pageControl.contentMode = .center
-        pageControl.isInactiveHollow = false
-        pageControl.isActiveHollow = false
-        pageControl.isAnimation  = true
         return pageControl
     }()
     
@@ -116,11 +103,8 @@ extension SwiftGuideView:  PageViewDataSource, PageViewDelegate {
         return cell
     }
     
-    public func pageViewDidScroll(_ pageView: PageView, scrollProgress: CGFloat) {
-        pageControl.progress = scrollProgress
-    }
-    
-    public func pageView(_ pageView: PageView, willScrollToItemAt index: Int) {
+    public func pageView(_ pageView: PageView, didScrollToItemAt index: Int) {
+
         guard let array = pageArray else {
             return
         }
@@ -132,8 +116,11 @@ extension SwiftGuideView:  PageViewDataSource, PageViewDelegate {
             openButton.isHidden = true
             pageControl.isHidden = false
         }
+        
+        pageControl.currentPage = index
+        
     }
-    
+
 }
 
 extension SwiftGuideView {
@@ -186,12 +173,6 @@ public class GuideConfig {
     public var pageControlInactiveColor = UIColor.white
     /// pageControl 选中颜色
     public var pageControlActiveColor = UIColor.red
-    /// pageControl 未选中大小
-    public var pageControlInactiveSize = CGSize(width: 10, height: 10)
-    /// pageControl 选中大小
-    public var pageControlActiveSize = CGSize(width: 20, height: 10)
-    /// pageControl 间距
-    public var pageControlColumnSpacing : CGFloat = 10
     /// pageControl 距离底部
     public var pageControlOffSetY : CGFloat = 50
     
