@@ -175,13 +175,11 @@ code_sign_if_enabled() {
 }
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/JXPageControl/JXPageControl.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SnapKit/SnapKit.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftGuideView/SwiftGuideView.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftPageView/SwiftPageView.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
-  install_framework "${BUILT_PRODUCTS_DIR}/JXPageControl/JXPageControl.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SnapKit/SnapKit.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftGuideView/SwiftGuideView.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/SwiftPageView/SwiftPageView.framework"

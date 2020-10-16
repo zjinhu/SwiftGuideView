@@ -1,28 +1,17 @@
 PODS:
-  - JXPageControl (0.1.3):
-    - JXPageControl/Common (= 0.1.3)
-    - JXPageControl/Jump (= 0.1.3)
-    - JXPageControl/Transform (= 0.1.3)
-  - JXPageControl/Common (0.1.3)
-  - JXPageControl/Jump (0.1.3):
-    - JXPageControl/Common
-  - JXPageControl/Transform (0.1.3):
-    - JXPageControl/Common
   - SnapKit (5.0.1)
-  - SwiftGuideView (0.5.0):
+  - SwiftGuideView (0.8.0):
     - SnapKit
     - SwiftPageView
-  - SwiftPageView (0.6.0)
+  - SwiftPageView (0.8.0)
 
 DEPENDENCIES:
-  - JXPageControl
   - SnapKit
   - SwiftGuideView (from `../`)
   - SwiftPageView
 
 SPEC REPOS:
   trunk:
-    - JXPageControl
     - SnapKit
     - SwiftPageView
 
@@ -31,11 +20,10 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  JXPageControl: eea52838699a4949063e600b25eb9e8b6e20ae3f
   SnapKit: 97b92857e3df3a0c71833cce143274bf6ef8e5eb
-  SwiftGuideView: afce579c99ff210c79353670b05bf1e18ef85b41
-  SwiftPageView: ac0f40ccd5bcd52e8fdfa30b6b506d6bd895f8f1
+  SwiftGuideView: 8988229927d7da71b6bb05bf7589a28eb1b94abe
+  SwiftPageView: be261a48286ce33ed832fb1324a5d39f8bd82906
 
-PODFILE CHECKSUM: 5bf6d9c898ff0f874d8ac90917441d2e5e94d1f2
+PODFILE CHECKSUM: efea913b722ef5efb6d4149d6d654df7b43fb789
 
 COCOAPODS: 1.10.0.rc.1

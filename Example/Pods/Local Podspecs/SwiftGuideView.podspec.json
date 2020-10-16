@@ -1,6 +1,6 @@
 {
   "name": "SwiftGuideView",
-  "version": "0.5.0",
+  "version": "0.8.0",
   "summary": "A short description of SwiftGuideView.",
   "description": "TODO: Add long description of the pod here.",
   "homepage": "https://github.com/jackiehu/SwiftGuideView",
@@ -13,7 +13,7 @@
   },
   "source": {
     "git": "https://github.com/jackiehu/SwiftGuideView.git",
-    "tag": "0.5.0"
+    "tag": "0.8.0"
   },
   "platforms": {
     "ios": "11.0"
