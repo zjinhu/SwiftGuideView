@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        DispatchQueue.main.asyncAfter(deadline: .now()+5) {
+        DispatchQueue.main.asyncAfter(deadline: .now()+0.5) {
             SwiftGuideView.showGuide(pageArray: ["1","2","3","4","5"], fromVC: self) { (c) in
                 c.openButtonTitle = "进入APP"
                 c.isDebug = true

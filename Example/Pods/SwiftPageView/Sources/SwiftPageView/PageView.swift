@@ -179,7 +179,7 @@ public class PageView: UIView {
     
     public var transformer: Transformer? {
         didSet {
-            transformer?.pageView = self
+            transformer?.pagerView = self
             flowLayout.forceInvalidate()
         }
     }
@@ -207,7 +207,7 @@ public class PageView: UIView {
     
     lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
-        collectionView.isPagingEnabled = true
+        collectionView.isPagingEnabled = false
         collectionView.showsVerticalScrollIndicator = false
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.delegate = self
@@ -215,7 +215,7 @@ public class PageView: UIView {
         collectionView.scrollsToTop = false
         collectionView.backgroundColor = UIColor.clear
         collectionView.bounces = false
-//        collectionView.decelerationRate = UIScrollView.DecelerationRate.fast
+        collectionView.decelerationRate = UIScrollView.DecelerationRate.fast
         collectionView.contentInset = .zero
         collectionView.scrollsToTop = false
         if #available(iOS 10.0, *) {
@@ -232,6 +232,7 @@ public class PageView: UIView {
     internal var numberOfItems: Int = 0
     internal var numberOfSections: Int = 0
     fileprivate var dequeingSection = 0
+    
     fileprivate var centermostIndexPath: IndexPath {
         guard numberOfItems > 0, collectionView.contentSize != .zero else {
             return IndexPath(item: 0, section: 0)
@@ -258,6 +259,7 @@ public class PageView: UIView {
         }
         return IndexPath(item: 0, section: 0)
     }
+    
     fileprivate var isPossiblyRotating: Bool {
         guard let animationKeys = layer.animationKeys() else {
             return false
@@ -265,6 +267,7 @@ public class PageView: UIView {
         let rotationAnimationKeys = ["position", "bounds.origin", "bounds.size"]
         return animationKeys.contains(where: { rotationAnimationKeys.contains($0) })
     }
+    
     fileprivate var possibleTargetingIndexPath: IndexPath?
     
     public override init(frame: CGRect) {

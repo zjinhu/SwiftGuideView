@@ -15,12 +15,12 @@ class Layout: UICollectionViewLayout {
     internal var needsReprepare = true
     internal var scrollDirection: PageView.ScrollDirection = .horizontal
     
-    public override class var layoutAttributesClass: AnyClass {
+    open override class var layoutAttributesClass: AnyClass {
         return LayoutAttributes.self
     }
     
-    fileprivate var pageView: PageView? {
-        return collectionView?.superview as? PageView
+    fileprivate var pagerView: PageView? {
+        return self.collectionView?.superview as? PageView
     }
     
     fileprivate var collectionViewSize: CGSize = .zero
@@ -31,139 +31,144 @@ class Layout: UICollectionViewLayout {
     
     override init() {
         super.init()
-        commonInit()
+        self.commonInit()
     }
     
     required public init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
-        commonInit()
+        self.commonInit()
     }
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
     }
     
-    override public func prepare() {
-        guard let collectionView = collectionView, let pageView = pageView else {
+    override open func prepare() {
+        guard let collectionView = self.collectionView, let pagerView = self.pagerView else {
             return
         }
-        guard needsReprepare || collectionViewSize != collectionView.frame.size else {
+        guard self.needsReprepare || self.collectionViewSize != collectionView.frame.size else {
             return
         }
-        needsReprepare = false
+        self.needsReprepare = false
         
-        collectionViewSize = collectionView.frame.size
+        self.collectionViewSize = collectionView.frame.size
 
-        numberOfSections = pageView.numberOfSections(in: collectionView)
-        numberOfItems = pageView.collectionView(collectionView, numberOfItemsInSection: 0)
-        actualItemSize = {
-            var size = pageView.itemSize
+        // Calculate basic parameters/variables
+        self.numberOfSections = pagerView.numberOfSections(in: collectionView)
+        self.numberOfItems = pagerView.collectionView(collectionView, numberOfItemsInSection: 0)
+        self.actualItemSize = {
+            var size = pagerView.itemSize
             if size == .zero {
                 size = collectionView.frame.size
             }
             return size
         }()
         
-        actualInteritemSpacing = {
-            if let transformer = pageView.transformer {
+        self.actualInteritemSpacing = {
+            if let transformer = pagerView.transformer {
                 return transformer.proposedInteritemSpacing()
             }
-            return pageView.interitemSpacing
+            return pagerView.interitemSpacing
         }()
-        scrollDirection = pageView.scrollDirection
-        leadingSpacing = scrollDirection == .horizontal ? (collectionView.frame.width-actualItemSize.width)*0.5 : (collectionView.frame.height-actualItemSize.height)*0.5
-        itemSpacing = (scrollDirection == .horizontal ? actualItemSize.width : actualItemSize.height) + actualInteritemSpacing
+        self.scrollDirection = pagerView.scrollDirection
+        self.leadingSpacing = self.scrollDirection == .horizontal ? (collectionView.frame.width-self.actualItemSize.width)*0.5 : (collectionView.frame.height-self.actualItemSize.height)*0.5
+        self.itemSpacing = (self.scrollDirection == .horizontal ? self.actualItemSize.width : self.actualItemSize.height) + self.actualInteritemSpacing
         
-        contentSize = {
-            let numberOfItems = self.numberOfItems*numberOfSections
-            switch scrollDirection {
+        // Calculate and cache contentSize, rather than calculating each time
+        self.contentSize = {
+            let numberOfItems = self.numberOfItems*self.numberOfSections
+            switch self.scrollDirection {
                 case .horizontal:
-                    var contentSizeWidth: CGFloat = leadingSpacing*2 // Leading & trailing spacing
-                    contentSizeWidth += CGFloat(numberOfItems-1)*actualInteritemSpacing // Interitem spacing
-                    contentSizeWidth += CGFloat(numberOfItems)*actualItemSize.width // Item sizes
+                    var contentSizeWidth: CGFloat = self.leadingSpacing*2 // Leading & trailing spacing
+                    contentSizeWidth += CGFloat(numberOfItems-1)*self.actualInteritemSpacing // Interitem spacing
+                    contentSizeWidth += CGFloat(numberOfItems)*self.actualItemSize.width // Item sizes
                     let contentSize = CGSize(width: contentSizeWidth, height: collectionView.frame.height)
                     return contentSize
                 case .vertical:
-                    var contentSizeHeight: CGFloat = leadingSpacing*2 // Leading & trailing spacing
-                    contentSizeHeight += CGFloat(numberOfItems-1)*actualInteritemSpacing // Interitem spacing
-                    contentSizeHeight += CGFloat(numberOfItems)*actualItemSize.height // Item sizes
+                    var contentSizeHeight: CGFloat = self.leadingSpacing*2 // Leading & trailing spacing
+                    contentSizeHeight += CGFloat(numberOfItems-1)*self.actualInteritemSpacing // Interitem spacing
+                    contentSizeHeight += CGFloat(numberOfItems)*self.actualItemSize.height // Item sizes
                     let contentSize = CGSize(width: collectionView.frame.width, height: contentSizeHeight)
                     return contentSize
             }
         }()
-        adjustCollectionViewBounds()
+        self.adjustCollectionViewBounds()
     }
     
-    override public var collectionViewContentSize: CGSize {
-        return contentSize
+    override open var collectionViewContentSize: CGSize {
+        return self.contentSize
     }
     
-    override public func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
+    override open func shouldInvalidateLayout(forBoundsChange newBounds: CGRect) -> Bool {
         return true
     }
     
-    override public func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+    override open func layoutAttributesForElements(in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
         var layoutAttributes = [UICollectionViewLayoutAttributes]()
-        guard itemSpacing > 0, !rect.isEmpty else {
+        guard self.itemSpacing > 0, !rect.isEmpty else {
             return layoutAttributes
         }
-        let rect = rect.intersection(CGRect(origin: .zero, size: contentSize))
+        let rect = rect.intersection(CGRect(origin: .zero, size: self.contentSize))
         guard !rect.isEmpty else {
             return layoutAttributes
         }
-        let numberOfItemsBefore = scrollDirection == .horizontal ? max(Int((rect.minX-leadingSpacing)/itemSpacing),0) : max(Int((rect.minY-leadingSpacing)/itemSpacing),0)
-        let startPosition = leadingSpacing + CGFloat(numberOfItemsBefore)*itemSpacing
+        // Calculate start position and index of certain rects
+        let numberOfItemsBefore = self.scrollDirection == .horizontal ? max(Int((rect.minX-self.leadingSpacing)/self.itemSpacing),0) : max(Int((rect.minY-self.leadingSpacing)/self.itemSpacing),0)
+        let startPosition = self.leadingSpacing + CGFloat(numberOfItemsBefore)*self.itemSpacing
         let startIndex = numberOfItemsBefore
+        // Create layout attributes
         var itemIndex = startIndex
         
         var origin = startPosition
-        let maxPosition = scrollDirection == .horizontal ? min(rect.maxX,contentSize.width-actualItemSize.width-leadingSpacing) : min(rect.maxY,contentSize.height-actualItemSize.height-leadingSpacing)
+        let maxPosition = self.scrollDirection == .horizontal ? min(rect.maxX,self.contentSize.width-self.actualItemSize.width-self.leadingSpacing) : min(rect.maxY,self.contentSize.height-self.actualItemSize.height-self.leadingSpacing)
+        // https://stackoverflow.com/a/10335601/2398107
         while origin-maxPosition <= max(CGFloat(100.0) * .ulpOfOne * abs(origin+maxPosition), .leastNonzeroMagnitude) {
-            let indexPath = IndexPath(item: itemIndex%numberOfItems, section: itemIndex/numberOfItems)
-            let attributes = layoutAttributesForItem(at: indexPath) as! LayoutAttributes
-            applyTransform(to: attributes, with: pageView?.transformer)
+            let indexPath = IndexPath(item: itemIndex%self.numberOfItems, section: itemIndex/self.numberOfItems)
+            let attributes = self.layoutAttributesForItem(at: indexPath) as! LayoutAttributes
+            self.applyTransform(to: attributes, with: self.pagerView?.transformer)
             layoutAttributes.append(attributes)
             itemIndex += 1
-            origin += itemSpacing
+            origin += self.itemSpacing
         }
         return layoutAttributes
         
     }
     
-    override public func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+    override open func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
         let attributes = LayoutAttributes(forCellWith: indexPath)
         attributes.indexPath = indexPath
         let frame = self.frame(for: indexPath)
         let center = CGPoint(x: frame.midX, y: frame.midY)
         attributes.center = center
-        attributes.size = actualItemSize
+        attributes.size = self.actualItemSize
         return attributes
     }
     
-    override public func targetContentOffset(forProposedContentOffset proposedContentOffset: CGPoint, withScrollingVelocity velocity: CGPoint) -> CGPoint {
-        guard let collectionView = collectionView, let pageView = pageView else {
+    override open func targetContentOffset(forProposedContentOffset proposedContentOffset: CGPoint, withScrollingVelocity velocity: CGPoint) -> CGPoint {
+        guard let collectionView = self.collectionView, let pagerView = self.pagerView else {
             return proposedContentOffset
         }
         var proposedContentOffset = proposedContentOffset
         
         func calculateTargetOffset(by proposedOffset: CGFloat, boundedOffset: CGFloat) -> CGFloat {
             var targetOffset: CGFloat
-            if pageView.decelerationDistance == PageView.automaticDistance {
+            if pagerView.decelerationDistance == PageView.automaticDistance {
                 if abs(velocity.x) >= 0.3 {
                     let vector: CGFloat = velocity.x >= 0 ? 1.0 : -1.0
-                    targetOffset = round(proposedOffset/itemSpacing+0.35*vector) * itemSpacing // Ceil by 0.15, rather than 0.5
+                    targetOffset = round(proposedOffset/self.itemSpacing+0.35*vector) * self.itemSpacing // Ceil by 0.15, rather than 0.5
                 } else {
-                    targetOffset = round(proposedOffset/itemSpacing) * itemSpacing
+                    targetOffset = round(proposedOffset/self.itemSpacing) * self.itemSpacing
                 }
             } else {
-                let extraDistance = max(pageView.decelerationDistance-1, 0)
+                let extraDistance = max(pagerView.decelerationDistance-1, 0)
                 switch velocity.x {
                 case 0.3 ... CGFloat.greatestFiniteMagnitude:
-                    targetOffset = ceil(collectionView.contentOffset.x/itemSpacing+CGFloat(extraDistance)) * itemSpacing
+                    targetOffset = ceil(collectionView.contentOffset.x/self.itemSpacing+CGFloat(extraDistance)) * self.itemSpacing
                 case -CGFloat.greatestFiniteMagnitude ... -0.3:
-                    targetOffset = floor(collectionView.contentOffset.x/itemSpacing-CGFloat(extraDistance)) * itemSpacing
+                    targetOffset = floor(collectionView.contentOffset.x/self.itemSpacing-CGFloat(extraDistance)) * self.itemSpacing
                 default:
-                    targetOffset = round(proposedOffset/itemSpacing) * itemSpacing
+                    targetOffset = round(proposedOffset/self.itemSpacing) * self.itemSpacing
                 }
             }
             targetOffset = max(0, targetOffset)
@@ -171,17 +176,17 @@ class Layout: UICollectionViewLayout {
             return targetOffset
         }
         let proposedContentOffsetX: CGFloat = {
-            if scrollDirection == .vertical {
+            if self.scrollDirection == .vertical {
                 return proposedContentOffset.x
             }
-            let boundedOffset = collectionView.contentSize.width-itemSpacing
+            let boundedOffset = collectionView.contentSize.width-self.itemSpacing
             return calculateTargetOffset(by: proposedContentOffset.x, boundedOffset: boundedOffset)
         }()
         let proposedContentOffsetY: CGFloat = {
-            if scrollDirection == .horizontal {
+            if self.scrollDirection == .horizontal {
                 return proposedContentOffset.y
             }
-            let boundedOffset = collectionView.contentSize.height-itemSpacing
+            let boundedOffset = collectionView.contentSize.height-self.itemSpacing
             return calculateTargetOffset(by: proposedContentOffset.y, boundedOffset: boundedOffset)
         }()
         proposedContentOffset = CGPoint(x: proposedContentOffsetX, y: proposedContentOffsetY)
@@ -191,27 +196,27 @@ class Layout: UICollectionViewLayout {
     // MARK:- Internal functions
     
     internal func forceInvalidate() {
-        needsReprepare = true
-        invalidateLayout()
+        self.needsReprepare = true
+        self.invalidateLayout()
     }
     
     internal func contentOffset(for indexPath: IndexPath) -> CGPoint {
-        let origin = frame(for: indexPath).origin
-        guard let collectionView = collectionView else {
+        let origin = self.frame(for: indexPath).origin
+        guard let collectionView = self.collectionView else {
             return origin
         }
         let contentOffsetX: CGFloat = {
-            if scrollDirection == .vertical {
+            if self.scrollDirection == .vertical {
                 return 0
             }
-            let contentOffsetX = origin.x - (collectionView.frame.width*0.5-actualItemSize.width*0.5)
+            let contentOffsetX = origin.x - (collectionView.frame.width*0.5-self.actualItemSize.width*0.5)
             return contentOffsetX
         }()
         let contentOffsetY: CGFloat = {
-            if scrollDirection == .horizontal {
+            if self.scrollDirection == .horizontal {
                 return 0
             }
-            let contentOffsetY = origin.y - (collectionView.frame.height*0.5-actualItemSize.height*0.5)
+            let contentOffsetY = origin.y - (collectionView.frame.height*0.5-self.actualItemSize.height*0.5)
             return contentOffsetY
         }()
         let contentOffset = CGPoint(x: contentOffsetX, y: contentOffsetY)
@@ -221,65 +226,63 @@ class Layout: UICollectionViewLayout {
     internal func frame(for indexPath: IndexPath) -> CGRect {
         let numberOfItems = self.numberOfItems*indexPath.section + indexPath.item
         let originX: CGFloat = {
-            if scrollDirection == .vertical {
-                return (collectionView!.frame.width-actualItemSize.width)*0.5
+            if self.scrollDirection == .vertical {
+                return (self.collectionView!.frame.width-self.actualItemSize.width)*0.5
             }
-            return leadingSpacing + CGFloat(numberOfItems)*itemSpacing
+            return self.leadingSpacing + CGFloat(numberOfItems)*self.itemSpacing
         }()
         let originY: CGFloat = {
-            if scrollDirection == .horizontal {
-                return (collectionView!.frame.height-actualItemSize.height)*0.5
+            if self.scrollDirection == .horizontal {
+                return (self.collectionView!.frame.height-self.actualItemSize.height)*0.5
             }
-            return leadingSpacing + CGFloat(numberOfItems)*itemSpacing
+            return self.leadingSpacing + CGFloat(numberOfItems)*self.itemSpacing
         }()
         let origin = CGPoint(x: originX, y: originY)
-        let frame = CGRect(origin: origin, size: actualItemSize)
+        let frame = CGRect(origin: origin, size: self.actualItemSize)
         return frame
     }
     
     // MARK:- Notification
     @objc
     fileprivate func didReceiveNotification(notification: Notification) {
-        if pageView?.itemSize == .zero {
-            adjustCollectionViewBounds()
+        if self.pagerView?.itemSize == .zero {
+            self.adjustCollectionViewBounds()
         }
     }
     
     // MARK:- Private functions
     
     fileprivate func commonInit() {
-        #if !os(tvOS)
-            NotificationCenter.default.addObserver(self, selector: #selector(didReceiveNotification(notification:)), name: UIDevice.orientationDidChangeNotification, object: nil)
-        #endif
+        NotificationCenter.default.addObserver(self, selector: #selector(didReceiveNotification(notification:)), name: UIDevice.orientationDidChangeNotification, object: nil)
     }
     
     fileprivate func adjustCollectionViewBounds() {
-        guard let collectionView = collectionView, let pageView = pageView else {
+        guard let collectionView = self.collectionView, let pagerView = self.pagerView else {
             return
         }
-        let currentIndex = pageView.currentIndex
-        let newIndexPath = IndexPath(item: currentIndex, section: pageView.isInfinite ? numberOfSections/2 : 0)
+        let currentIndex = pagerView.currentIndex
+        let newIndexPath = IndexPath(item: currentIndex, section: pagerView.isInfinite ? self.numberOfSections/2 : 0)
         let contentOffset = self.contentOffset(for: newIndexPath)
         let newBounds = CGRect(origin: contentOffset, size: collectionView.frame.size)
         collectionView.bounds = newBounds
     }
     
     fileprivate func applyTransform(to attributes: LayoutAttributes, with transformer: Transformer?) {
-        guard let collectionView = collectionView else {
+        guard let collectionView = self.collectionView else {
             return
         }
         guard let transformer = transformer else {
             return
         }
-        switch scrollDirection {
+        switch self.scrollDirection {
         case .horizontal:
             let ruler = collectionView.bounds.midX
-            attributes.position = (attributes.center.x-ruler)/itemSpacing
+            attributes.position = (attributes.center.x-ruler)/self.itemSpacing
         case .vertical:
             let ruler = collectionView.bounds.midY
-            attributes.position = (attributes.center.y-ruler)/itemSpacing
+            attributes.position = (attributes.center.y-ruler)/self.itemSpacing
         }
-        attributes.zIndex = Int(numberOfItems)-Int(attributes.position)
+        attributes.zIndex = Int(self.numberOfItems)-Int(attributes.position)
         transformer.applyTransform(to: attributes)
     }
 
@@ -323,33 +326,34 @@ public enum TransformerType: Int {
 
 public class Transformer: NSObject {
     
-    public internal(set) weak var pageView: PageView?
-    public internal(set) var type: TransformerType
+    open internal(set) weak var pagerView: PageView?
+    open internal(set) var type: TransformerType
     
-    public var minimumScale: CGFloat = 0.65
-    public var minimumAlpha: CGFloat = 0.6
+    @objc open var minimumScale: CGFloat = 0.65
+    @objc open var minimumAlpha: CGFloat = 0.6
     
     @objc
     public init(type: TransformerType) {
         self.type = type
         switch type {
         case .zoomOut:
-            minimumScale = 0.85
+            self.minimumScale = 0.85
         case .depth:
-            minimumScale = 0.5
+            self.minimumScale = 0.5
         default:
             break
         }
     }
     
-    public func applyTransform(to attributes: LayoutAttributes) {
-        guard let pageView = pageView else {
+    // Apply transform to attributes - zIndex: Int, frame: CGRect, alpha: CGFloat, transform: CGAffineTransform or transform3D: CATransform3D.
+    open func applyTransform(to attributes: LayoutAttributes) {
+        guard let pagerView = self.pagerView else {
             return
         }
         let position = attributes.position
-        let scrollDirection = pageView.scrollDirection
-        let itemSpacing = (scrollDirection == .horizontal ? attributes.bounds.width : attributes.bounds.height) + proposedInteritemSpacing()
-        switch type {
+        let scrollDirection = pagerView.scrollDirection
+        let itemSpacing = (scrollDirection == .horizontal ? attributes.bounds.width : attributes.bounds.height) + self.proposedInteritemSpacing()
+        switch self.type {
         case .crossFading:
             var zIndex = 0
             var alpha: CGFloat = 0
@@ -361,9 +365,11 @@ public class Transformer: NSObject {
                 transform.ty = -itemSpacing * position
             }
             if (abs(position) < 1) { // [-1,1]
+                // Use the default slide transition when moving to the left page
                 alpha = 1 - abs(position)
                 zIndex = 1
             } else { // (1,+Infinity]
+                // This page is way off-screen to the right.
                 alpha = 0
                 zIndex = Int.min
             }
@@ -375,9 +381,11 @@ public class Transformer: NSObject {
             var transform = CGAffineTransform.identity
             switch position {
             case -CGFloat.greatestFiniteMagnitude ..< -1 : // [-Infinity,-1)
+                // This page is way off-screen to the left.
                 alpha = 0
             case -1 ... 1 :  // [-1,1]
-                let scaleFactor = max(minimumScale, 1 - abs(position))
+                // Modify the default slide transition to shrink the page as well
+                let scaleFactor = max(self.minimumScale, 1 - abs(position))
                 transform.a = scaleFactor
                 transform.d = scaleFactor
                 switch scrollDirection {
@@ -390,8 +398,10 @@ public class Transformer: NSObject {
                     let vertMargin = itemSpacing * (1 - scaleFactor) / 2;
                     transform.ty = position < 0 ? (vertMargin - horzMargin*2) : (-vertMargin + horzMargin*2)
                 }
-                alpha = minimumAlpha + (scaleFactor-minimumScale)/(1-minimumScale)*(1-minimumAlpha)
+                // Fade the page relative to its size.
+                alpha = self.minimumAlpha + (scaleFactor-self.minimumScale)/(1-self.minimumScale)*(1-self.minimumAlpha)
             case 1 ... CGFloat.greatestFiniteMagnitude :  // (1,+Infinity]
+                // This page is way off-screen to the right.
                 alpha = 0
             default:
                 break
@@ -404,28 +414,34 @@ public class Transformer: NSObject {
             var alpha: CGFloat = 0.0
             switch position {
             case -CGFloat.greatestFiniteMagnitude ..< -1: // [-Infinity,-1)
+                // This page is way off-screen to the left.
                 alpha = 0
                 zIndex = 0
             case -1 ... 0:  // [-1,0]
+                // Use the default slide transition when moving to the left page
                 alpha = 1
                 transform.tx = 0
                 transform.a = 1
                 transform.d = 1
                 zIndex = 1
             case 0 ..< 1: // (0,1)
+                // Fade the page out.
                 alpha = CGFloat(1.0) - position
+                // Counteract the default slide transition
                 switch scrollDirection {
                 case .horizontal:
                     transform.tx = itemSpacing * -position
                 case .vertical:
                     transform.ty = itemSpacing * -position
                 }
-                let scaleFactor = minimumScale
-                    + (1.0 - minimumScale) * (1.0 - abs(position));
+                // Scale the page down (between minimumScale and 1)
+                let scaleFactor = self.minimumScale
+                    + (1.0 - self.minimumScale) * (1.0 - abs(position));
                 transform.a = scaleFactor
                 transform.d = scaleFactor
                 zIndex = 0
             case 1 ... CGFloat.greatestFiniteMagnitude: // [1,+Infinity)
+                // This page is way off-screen to the right.
                 alpha = 0
                 zIndex = 0
             default:
@@ -436,17 +452,19 @@ public class Transformer: NSObject {
             attributes.zIndex = zIndex
         case .overlap,.linear:
             guard scrollDirection == .horizontal else {
+                // This type doesn't support vertical mode
                 return
             }
-            let scale = max(1 - (1-minimumScale) * abs(position), minimumScale)
+            let scale = max(1 - (1-self.minimumScale) * abs(position), self.minimumScale)
             let transform = CGAffineTransform(scaleX: scale, y: scale)
             attributes.transform = transform
-            let alpha = (minimumAlpha + (1-abs(position))*(1-minimumAlpha))
+            let alpha = (self.minimumAlpha + (1-abs(position))*(1-self.minimumAlpha))
             attributes.alpha = alpha
             let zIndex = (1-abs(position)) * 10
             attributes.zIndex = Int(zIndex)
         case .coverFlow:
             guard scrollDirection == .horizontal else {
+                // This type doesn't support vertical mode
                 return
             }
             let position = min(max(-position,-1) ,1)
@@ -460,19 +478,21 @@ public class Transformer: NSObject {
             attributes.transform3D = transform3D
         case .ferrisWheel, .invertedFerrisWheel:
             guard scrollDirection == .horizontal else {
+                // This type doesn't support vertical mode
                 return
             }
+            // http://ronnqvi.st/translate-rotate-translate/
             var zIndex = 0
             var transform = CGAffineTransform.identity
             switch position {
             case -5 ... 5:
-                let itemSpacing = attributes.bounds.width+proposedInteritemSpacing()
+                let itemSpacing = attributes.bounds.width+self.proposedInteritemSpacing()
                 let count: CGFloat = 14
                 let circle: CGFloat = .pi * 2.0
                 let radius = itemSpacing * count / circle
-                let ty = radius * (type == .ferrisWheel ? 1 : -1)
+                let ty = radius * (self.type == .ferrisWheel ? 1 : -1)
                 let theta = circle / count
-                let rotation = position * theta * (type == .ferrisWheel ? 1 : -1)
+                let rotation = position * theta * (self.type == .ferrisWheel ? 1 : -1)
                 transform = transform.translatedBy(x: -position*itemSpacing, y: ty)
                 transform = transform.rotated(by: rotation)
                 transform = transform.translatedBy(x: 0, y: -ty)
@@ -480,7 +500,7 @@ public class Transformer: NSObject {
             default:
                 break
             }
-            attributes.alpha = abs(position) < 0.5 ? 1 : minimumAlpha
+            attributes.alpha = abs(position) < 0.5 ? 1 : self.minimumAlpha
             attributes.transform = transform
             attributes.zIndex = zIndex
         case .cubic:
@@ -516,39 +536,40 @@ public class Transformer: NSObject {
             }
         }
     }
-
-    public func proposedInteritemSpacing() -> CGFloat {
-        guard let pageView = pageView else {
+    
+    // An interitem spacing proposed by transformer class. This will override the default interitemSpacing provided by the pager view.
+    open func proposedInteritemSpacing() -> CGFloat {
+        guard let pagerView = self.pagerView else {
             return 0
         }
-        let scrollDirection = pageView.scrollDirection
-        switch type {
+        let scrollDirection = pagerView.scrollDirection
+        switch self.type {
         case .overlap:
             guard scrollDirection == .horizontal else {
                 return 0
             }
-            return pageView.itemSize.width * -minimumScale * 0.6
+            return pagerView.itemSize.width * -self.minimumScale * 0.6
         case .linear:
             guard scrollDirection == .horizontal else {
                 return 0
             }
-            return pageView.itemSize.width * -minimumScale * 0.2
+            return pagerView.itemSize.width * -self.minimumScale * 0.2
         case .coverFlow:
             guard scrollDirection == .horizontal else {
                 return 0
             }
-            return -pageView.itemSize.width * sin(.pi*0.25*0.25*3.0)
+            return -pagerView.itemSize.width * sin(.pi*0.25*0.25*3.0)
         case .ferrisWheel,.invertedFerrisWheel:
             guard scrollDirection == .horizontal else {
                 return 0
             }
-            return -pageView.itemSize.width * 0.15
+            return -pagerView.itemSize.width * 0.15
         case .cubic:
             return 0
         default:
             break
         }
-        return pageView.interitemSpacing
+        return pagerView.interitemSpacing
     }
     
 }

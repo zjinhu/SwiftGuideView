@@ -3,7 +3,7 @@ PODS:
   - SwiftGuideView (0.8.0):
     - SnapKit
     - SwiftPageView
-  - SwiftPageView (0.8.0)
+  - SwiftPageView (0.8.1)
 
 DEPENDENCIES:
   - SnapKit
@@ -22,8 +22,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   SnapKit: 97b92857e3df3a0c71833cce143274bf6ef8e5eb
   SwiftGuideView: 8988229927d7da71b6bb05bf7589a28eb1b94abe
-  SwiftPageView: be261a48286ce33ed832fb1324a5d39f8bd82906
+  SwiftPageView: 942c4602ecd27b96ee4600f3d13f39dda13d3eb7
 
 PODFILE CHECKSUM: efea913b722ef5efb6d4149d6d654df7b43fb789
 
-COCOAPODS: 1.10.0.rc.1
+COCOAPODS: 1.10.1
