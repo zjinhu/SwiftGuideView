@@ -1,6 +1,6 @@
 # SwiftGuideView
 
-基于SwiftPageView](https://github.com/jackiehu/SwiftPageView)的启动引导页。在相应的页面调用静态方法并配置适配器即可。
+基于[SwiftPageView](https://github.com/jackiehu/SwiftPageView) 的启动引导页。在相应的页面调用静态方法并配置适配器即可。
 
 ```swift
             SwiftGuideView.showGuide(pageArray: ["1","2","3","4","5"], fromVC: self) { (c) in
